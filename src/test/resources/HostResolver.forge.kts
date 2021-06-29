@@ -2,7 +2,7 @@
 
 import software.amazon.awssdk.forge.*
 
-@Resource
+@Resource(HostResolver::class)
 @Destructor("aws_crt_host_resolver_release")
 interface HostResolver {
 

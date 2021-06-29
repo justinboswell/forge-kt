@@ -1,30 +1,23 @@
 package software.amazon.awssdk.forge
 
-interface NativeType {
-    val size: Int;
-}
+open class NativeType<T>(val size: Int, val default: T)
 
-open class Int32 : NativeType {
-    override val size = 4;
-}
+class Int32(default: Int = 0)
+    : NativeType<kotlin.Int>(4, default)
 
-open class Int64 : NativeType {
-    override val size = 8;
-}
+class Int64(default: Long = 0)
+    : NativeType<kotlin.Long>(8, default)
 
-open class Char : NativeType {
-    override val size = 1;
-}
+class Char(default: kotlin.Char = 0.toChar())
+    : NativeType<kotlin.Char>(1, default)
 
-class Float : Int32();
+class Float(default: kotlin.Float = 0.0f)
+    : NativeType<kotlin.Float>(4, default)
 
-class Double : Int64();
+class Double(default: kotlin.Double = 0.0)
+    : NativeType<kotlin.Double>(8, default)
 
-class IntPtr : NativeType {
-    override val size: Int
-        get() = 4;
-}
+open class IntPtr(default: kotlin.Long = 0)
+    : NativeType<kotlin.Long>(8, default)
 
-class Pointer<T : NativeType> : NativeType {
-    override val size = IntPtr().size;
-}
+class Pointer<T> : IntPtr()
