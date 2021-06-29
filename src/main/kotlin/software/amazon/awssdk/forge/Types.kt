@@ -1,3 +1,4 @@
+package software.amazon.awssdk.forge
 
 interface NativeType {
     val size: Int;
