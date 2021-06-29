@@ -1,6 +1,7 @@
 package software.amazon.awssdk.forge
 
 import java.io.File
+import kotlin.reflect.KCallable
 
 import kotlin.script.experimental.api.EvaluationResult
 import kotlin.script.experimental.api.ResultWithDiagnostics
@@ -37,7 +38,8 @@ fun main(vararg args: String) {
         println("Usage: forge <PATH>")
     }
 
-    var declarations = emptyList<KClass<*>>()
+    var classes = emptyList<KClass<*>>()
+    var functions = emptyList<KCallable<*>>()
     args.forEach { pathArg ->
         val path = File(pathArg).absoluteFile;
         if (!path.exists()) {
@@ -63,13 +65,30 @@ fun main(vararg args: String) {
             }
             val scriptContext = result.valueOrThrow().returnValue.scriptClass;
             if (scriptContext != null)  {
-                declarations += scriptContext.nestedClasses
-                println("Processed $script, found ${scriptContext.nestedClasses.map { it.simpleName }}")
+                // Extract interfaces/classes
+                val scriptClasses = scriptContext.nestedClasses
+                classes += scriptClasses
+                println("  Classes:")
+                scriptClasses.map { it.simpleName }.forEach {
+                    println("    $it")
+                }
+
+                // Extract functions
+                val scriptFunctions = scriptContext.members.filter { fn ->
+                    !setOf("equals", "hashCode", "toString").contains(fn.name)
+                }
+                functions += scriptFunctions
+                println("  Functions:")
+                scriptFunctions.map { fn ->
+                    fn.name
+                }.forEach {
+                    println("    $it")
+                }
             }
         }
     }
 
-    declarations.forEach {
+    classes.forEach {
         println("Interface: ${it.simpleName}")
         val annotations = it.annotations
         println("  Annotations: $annotations")

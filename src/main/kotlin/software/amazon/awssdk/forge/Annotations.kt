@@ -17,3 +17,14 @@ annotation class Default(val default: String)
 
 @Target(AnnotationTarget.PROPERTY)
 annotation class Setter(val symbol: String)
+
+enum class Call {
+    STATIC,
+    METHOD
+}
+
+@Target(AnnotationTarget.FUNCTION)
+annotation class Method(val symbol: String, val call: Call)
+
+@Target(AnnotationTarget.FUNCTION)
+annotation class Static()

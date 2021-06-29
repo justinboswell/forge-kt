@@ -20,4 +20,7 @@ class Double(default: kotlin.Double = 0.0)
 open class IntPtr(default: kotlin.Long = 0)
     : NativeType<kotlin.Long>(8, default)
 
+class Void()
+    : NativeType<java.lang.Void?>(0, null)
+
 class Pointer<T> : IntPtr()
