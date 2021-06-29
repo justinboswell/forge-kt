@@ -16,6 +16,7 @@ dependencies {
     implementation(kotlin("scripting-common"))
     implementation(kotlin("scripting-jvm"))
     implementation(kotlin("scripting-jvm-host"))
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.20")
     testImplementation(kotlin("test"))
 }
 

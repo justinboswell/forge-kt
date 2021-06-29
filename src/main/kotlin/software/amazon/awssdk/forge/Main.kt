@@ -34,33 +34,45 @@ fun compileScript(file: File) : ResultWithDiagnostics<EvaluationResult> {
 
 fun main(vararg args: String) {
     if (args.isEmpty()) {
-        println("Usage: forge /path/to/interface.kts")
+        println("Usage: forge <PATH>")
     }
 
     var declarations = emptyList<KClass<*>>()
-    args.forEach { it ->
-        val idl = File(it).absoluteFile;
-        if (!idl.exists()) {
-            println("Input file $idl does not exist")
+    args.forEach { pathArg ->
+        val path = File(pathArg).absoluteFile;
+        if (!path.exists()) {
+            println("Input path $path does not exist")
         }
-        val result = compileScript(idl)
-        if (result.isError()) {
-            result.reports.forEach {
-                println(it.toString())
+        var scripts = emptyList<File>()
+        if (path.isDirectory()) {
+            scripts += path.walkTopDown().filter {
+                it.name.endsWith(".forge.kts")
+            }.toList()
+        } else {
+            scripts += path
+        }
+        scripts.forEach { script ->
+            println("Compiling $script")
+            val result = compileScript(script)
+            if (result.isError()) {
+                println("Compilation failed:")
+                result.reports.forEach {
+                    println(it.toString())
+                }
+                return
             }
-            return
-        }
-        val script = result.valueOrThrow().returnValue.scriptClass;
-        if (script != null)  {
-            declarations += script.nestedClasses
-            println("Processed $it, found ${script.nestedClasses.map { it.simpleName }}")
+            val scriptContext = result.valueOrThrow().returnValue.scriptClass;
+            if (scriptContext != null)  {
+                declarations += scriptContext.nestedClasses
+                println("Processed $script, found ${scriptContext.nestedClasses.map { it.simpleName }}")
+            }
         }
     }
 
     declarations.forEach {
         println("Interface: ${it.simpleName}")
         val annotations = it.annotations
-        println("Annotations: $annotations")
+        println("  Annotations: $annotations")
     }
 
 }
