@@ -2,7 +2,6 @@ package software.amazon.awssdk.forge.native
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.KTypeProjection
 import kotlin.reflect.typeOf
 
 open class NativeType<T>(val size: kotlin.Int, open val ctype: String, val default: T)

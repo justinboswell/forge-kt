@@ -16,7 +16,7 @@ class NativeFunction(val function: KCallable<*>)
     val cdecl: String get() {
         val cparams = this.params.map {
             "${it.second.ctype} ${it.first}"
-        }.joinToString(",")
+        }.joinToString(", ")
         return "${returnType.ctype} ${function.name}(${cparams})"
     }
 

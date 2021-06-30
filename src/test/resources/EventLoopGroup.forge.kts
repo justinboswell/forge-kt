@@ -19,6 +19,6 @@ interface EventLoopGroupOptions {
 }
 
 @Resource("aws_crt_event_loop_group")
-@Constructor("aws_crt_event_loop_group_new")
+@Constructor("aws_crt_event_loop_group_new", EventLoopGroupOptions::class)
 @Destructor("aws_crt_event_loop_group_release")
 interface EventLoopGroup

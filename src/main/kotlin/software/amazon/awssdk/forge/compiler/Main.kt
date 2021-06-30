@@ -90,6 +90,7 @@ fun main(vararg args: String) {
         }
     }
 
+    // Convert from Kotlin reflection to our representation
     context.structs += classes.associate {
         it.simpleName!! to Struct(it)
     }
