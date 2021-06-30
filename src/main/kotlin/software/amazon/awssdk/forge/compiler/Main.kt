@@ -1,6 +1,9 @@
 package software.amazon.awssdk.forge.compiler
 
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
 import java.io.File
+import java.util.stream.Collectors
 import kotlin.reflect.KCallable
 
 import kotlin.script.experimental.api.EvaluationResult
@@ -17,13 +20,14 @@ import kotlin.script.experimental.jvm.util.isError
 
 import kotlin.reflect.KClass
 import kotlin.script.experimental.api.valueOrThrow
+import kotlin.system.exitProcess
 
 // Create a script class for processing .forge.kts scripts
 @KotlinScript(fileExtension = "forge.kts")
 abstract class ForgeIDL
 
 // Create a compilation context and evaluate a script file
-fun compileScript(file: File) : ResultWithDiagnostics<EvaluationResult> {
+fun evalScript(file: File): ResultWithDiagnostics<EvaluationResult> {
     val compilationConfiguration = createJvmCompilationConfigurationFromTemplate<ForgeIDL> {
         jvm {
             dependenciesFromCurrentContext(wholeClasspath = true)
@@ -33,77 +37,77 @@ fun compileScript(file: File) : ResultWithDiagnostics<EvaluationResult> {
     return BasicJvmScriptingHost().eval(file.toScriptSource(), compilationConfiguration, null)
 }
 
-fun main(vararg args: String) {
-    if (args.isEmpty()) {
-        println("Usage: forge <PATH>")
+fun compileScript(file: File): TranslationUnit {
+    val ctx = TranslationUnit()
+    println("Compiling $file")
+    val result = evalScript(file)
+    if (result.isError()) {
+        throw CompilationFailure(result.reports.joinToString("\n") { it.toString() })
     }
 
-    val context = Context()
+    // Kotlin script creates a class out of the file to scope the contents
+    // So we interrogate whatever symbols we can find inside the returned class
+    val scriptContext = result.valueOrThrow().returnValue.scriptClass;
+    if (scriptContext != null) {
+        // Extract interfaces/classes
+        val scriptClasses = scriptContext.nestedClasses
 
-    val classes = emptyList<KClass<*>>().toMutableList()
-    val functions = emptyList<KCallable<*>>().toMutableList()
-    args.forEach { pathArg ->
+        // Extract functions
+        val scriptFunctions = scriptContext.members.filter { fn ->
+            !setOf("equals", "hashCode", "toString").contains(fn.name)
+        }
+
+        // Convert from Kotlin reflection to our representation
+        ctx.structs += scriptClasses.associate {
+            it.simpleName!! to Struct(it)
+        }
+        ctx.symbols += scriptFunctions.associate {
+            it.name to NativeFunction(it)
+        }
+    }
+
+    return ctx;
+}
+
+fun compileSources(paths: Iterable<String>): List<TranslationUnit> {
+    return paths.map { pathArg ->
         val path = File(pathArg).absoluteFile;
         if (!path.exists()) {
             println("Input path $path does not exist")
         }
-        var scripts = emptyList<File>()
-        if (path.isDirectory()) {
+        val scripts = emptyList<File>().toMutableList()
+        if (path.isDirectory) {
             scripts += path.walkTopDown().filter {
                 it.name.endsWith(".forge.kts")
             }.toList()
         } else {
             scripts += path
         }
-        scripts.forEach { script ->
-            println("Compiling $script")
-            val result = compileScript(script)
-            if (result.isError()) {
-                println("Compilation failed:")
-                result.reports.forEach {
-                    println(it.toString())
-                }
-                return
-            }
-            val scriptContext = result.valueOrThrow().returnValue.scriptClass;
-            if (scriptContext != null)  {
-                // Extract interfaces/classes
-                val scriptClasses = scriptContext.nestedClasses
-                classes += scriptClasses
-                println("  Classes:")
-                scriptClasses.map { it.simpleName }.forEach {
-                    println("    $it")
-                }
+        scripts.stream().parallel()
+            .map { compileScript(it) }
+            .collect(Collectors.toList())
+    }.flatten()
+}
 
-                // Extract functions
-                val scriptFunctions = scriptContext.members.filter { fn ->
-                    !setOf("equals", "hashCode", "toString").contains(fn.name)
-                }
-                functions += scriptFunctions
-                println("  Functions:")
-                scriptFunctions.map { fn ->
-                    fn.name
-                }.forEach {
-                    println("    $it")
-                }
+fun main(vararg args: String) {
+    if (args.isEmpty()) {
+        println("Usage: forge <PATH>")
+    }
+
+    val paths = args.toList()
+    try {
+        val translationUnits = compileSources(paths)
+        translationUnits.forEach { tu ->
+            tu.structs.values.forEach { struct ->
+                println("struct $struct")
+            }
+            tu.symbols.values.forEach { symbol ->
+                println("symbol ${(symbol as NativeFunction).cdecl}")
             }
         }
-    }
-
-    // Convert from Kotlin reflection to our representation
-    context.structs += classes.associate {
-        it.simpleName!! to Struct(it)
-    }
-    context.symbols += functions.associate {
-        it.name to NativeFunction(it)
-    }
-
-    context.structs.forEach { struct ->
-        println("struct $struct")
-    }
-
-    context.symbols.forEach { entry ->
-        val fn = entry.value as NativeFunction
-        println("symbol ${fn.cdecl}")
+    } catch (compileFailure: CompilationFailure) {
+        println("Compilation failed:")
+        println(compileFailure.message)
+        exitProcess(-1)
     }
 }
