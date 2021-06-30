@@ -1,10 +1,16 @@
 package software.amazon.awssdk.forge.native
 
+import software.amazon.awssdk.forge.compiler.Architecture
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
-abstract class NativeType<T>(val size: kotlin.Int, open val ctype: String, val default: T)
+abstract class NativeType<T>(val size: kotlin.Int, open val ctype: String, val default: T) {
+    companion object {
+        // This must be set by the compiler before being used
+        lateinit var arch : Architecture
+    }
+}
 
 abstract class Int<T>(size: kotlin.Int, ctype: String)
     : NativeType<kotlin.Int>(size, ctype, 0)
@@ -34,7 +40,7 @@ class CString
     : NativeType<kotlin.String>(Pointer<Char>(typeOf<Pointer<Char>>()).size, "char*", "")
 
 class Pointer<in T : Any>(private val pointerType: KType)
-    : NativeType<kotlin.Long>(8, "void*", 0) {
+    : NativeType<kotlin.Long>(if (arch.bits == 32) 4 else 8, "void*", 0) {
 
     private val kclass = this.pointerType.toPointeeKClass()
     val ktype = kclass.simpleName + "?"

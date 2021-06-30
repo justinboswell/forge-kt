@@ -16,6 +16,7 @@ dependencies {
     implementation(kotlin("scripting-jvm"))
     implementation(kotlin("scripting-jvm-host"))
     implementation(kotlin("reflect"))
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.2")
     testImplementation(kotlin("test"))
 }
 

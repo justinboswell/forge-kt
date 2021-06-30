@@ -1,5 +1,6 @@
 package software.amazon.awssdk.forge.compiler
 
+import software.amazon.awssdk.forge.native.NativeType
 import java.io.File
 import java.util.stream.Collectors
 import kotlin.script.experimental.annotations.KotlinScript
@@ -17,12 +18,17 @@ import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromT
 @KotlinScript(fileExtension = "forge.kts")
 abstract class ForgeIDL
 
-class Compiler {
+class Compiler(val arch: Architecture = Architecture.Any64) {
     private val scriptingHost = BasicJvmScriptingHost()
     private val scriptCompilationConfiguration = createJvmCompilationConfigurationFromTemplate<ForgeIDL> {
         jvm {
             dependenciesFromCurrentContext(wholeClasspath = true)
         }
+    }
+
+    init {
+        // Any NativeTypes initialized during this compiler's lifetime will match the arch
+        NativeType.arch = arch
     }
 
     // Create a compilation context and evaluate a script file
