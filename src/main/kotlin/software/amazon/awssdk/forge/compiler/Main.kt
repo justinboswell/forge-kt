@@ -40,8 +40,8 @@ fun main(vararg args: String) {
 
     val context = Context()
 
-    var classes = emptyList<KClass<*>>()
-    var functions = emptyList<KCallable<*>>()
+    val classes = emptyList<KClass<*>>().toMutableList()
+    val functions = emptyList<KCallable<*>>().toMutableList()
     args.forEach { pathArg ->
         val path = File(pathArg).absoluteFile;
         if (!path.exists()) {

@@ -2,7 +2,6 @@ plugins {
     kotlin("jvm") version "1.5.20"
 }
 
-
 group = "software.amazon.awssdk.forge"
 version = "1.0-SNAPSHOT"
 
@@ -16,8 +15,12 @@ dependencies {
     implementation(kotlin("scripting-common"))
     implementation(kotlin("scripting-jvm"))
     implementation(kotlin("scripting-jvm-host"))
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.20")
+    implementation(kotlin("reflect"))
     testImplementation(kotlin("test"))
+}
+
+tasks.compileKotlin {
+    kotlinOptions.freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
 }
 
 tasks.test {

@@ -19,35 +19,6 @@ class NativeFunction(val function: KCallable<*>)
         }.joinToString(", ")
         return "${returnType.ctype} ${function.name}(${cparams})"
     }
-
-    fun KType.toNativeType() : NativeType<*> {
-        @Suppress("UNCHECKED_CAST")
-        val kclass = this.classifier as KClass<NativeType<*>>
-        // Special case Pointer<T>
-        if (kclass.simpleName == "Pointer") {
-            val ctor = kclass.constructors.first {
-                !it.parameters.isEmpty()
-            }
-            return ctor.call(this)
-        }
-        // Convert Kotlin Unit -> Void
-        if (this.classifier == kotlin.Unit::class) {
-            return Void()
-        }
-
-        // Should be a primitive type
-        try {
-            val ctor = kclass.constructors.first()
-            return ctor.call()
-        } catch (ex: NoSuchElementException) {
-            println("ERROR: Type $kclass is not a recognized native type");
-            return Void()
-        }
-    }
-
-    fun KParameter.toNativeType() : NativeType<*> {
-        return this.type.toNativeType()
-    }
 }
 
 class NativeValue(name: String) : NativeSymbol(name)
