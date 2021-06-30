@@ -1,4 +1,4 @@
-package software.amazon.awssdk.forge
+package software.amazon.awssdk.forge.compiler
 
 import java.io.File
 import kotlin.reflect.KCallable
@@ -37,6 +37,8 @@ fun main(vararg args: String) {
     if (args.isEmpty()) {
         println("Usage: forge <PATH>")
     }
+
+    val context = Context()
 
     var classes = emptyList<KClass<*>>()
     var functions = emptyList<KCallable<*>>()
@@ -88,10 +90,19 @@ fun main(vararg args: String) {
         }
     }
 
-    classes.forEach {
-        println("Interface: ${it.simpleName}")
-        val annotations = it.annotations
-        println("  Annotations: $annotations")
+    context.structs += classes.associate {
+        it.simpleName!! to Struct(it)
+    }
+    context.symbols += functions.associate {
+        it.name to NativeFunction(it)
     }
 
+    context.structs.forEach { struct ->
+        println("struct $struct")
+    }
+
+    context.symbols.forEach { entry ->
+        val fn = entry.value as NativeFunction
+        println("symbol ${fn.cdecl}")
+    }
 }
