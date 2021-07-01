@@ -1,8 +1,6 @@
 
 package software.amazon.awssdk.forge.native
 
-import kotlin.reflect.KClass
-
 /// Specifies that this class represents a managed native resource
 @Target(AnnotationTarget.CLASS)
 annotation class Resource(val ctype: String)

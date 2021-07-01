@@ -1,11 +1,7 @@
 package software.amazon.awssdk.forge.compiler
 
-import software.amazon.awssdk.forge.native.NativeType
-import software.amazon.awssdk.forge.native.Void
 import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
-import kotlin.reflect.KType
 
 abstract class NativeSymbol(val name: String)
 
