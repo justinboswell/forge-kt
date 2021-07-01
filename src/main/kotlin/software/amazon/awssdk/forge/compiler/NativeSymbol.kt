@@ -11,8 +11,8 @@ abstract class NativeSymbol(val name: String)
 
 class NativeFunction(val function: KCallable<*>)
     : NativeSymbol(function.name) {
-    val returnType = function.returnType.toNativeType()
-    val params = function.parameters.filter { it.kind == KParameter.Kind.VALUE }.map { it.name!! to it.toNativeType() }.toList()
+    val returnType = function.returnType.nativeType
+    val params = function.parameters.filter { it.kind == KParameter.Kind.VALUE }.map { it.name!! to it.nativeType }.toList()
     val cdecl: String get() {
         val cparams = this.params.map {
             "${it.second.ctype} ${it.first}"

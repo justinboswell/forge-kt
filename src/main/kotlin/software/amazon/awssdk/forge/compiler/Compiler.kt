@@ -37,7 +37,6 @@ class Compiler(val arch: Architecture = Architecture.Any64) {
     }
 
     fun compileScript(file: File): TranslationUnit {
-        val ctx = TranslationUnit()
         println("Compiling $file")
         val result = evalScript(file)
         if (result.isError()) {
@@ -46,33 +45,17 @@ class Compiler(val arch: Architecture = Architecture.Any64) {
 
         // Kotlin script creates a class out of the file to scope the contents
         // So we interrogate whatever symbols we can find inside the returned class
-        val scriptContext = result.valueOrThrow().returnValue.scriptClass;
-        if (scriptContext != null) {
-            // Extract interfaces/classes
-            val scriptClasses = scriptContext.nestedClasses
+        val scriptContext = result.valueOrThrow().returnValue.scriptClass
+            ?: throw CompilationFailure("Kotlin script engine could not evaluate $file");
 
-            // Extract functions
-            val scriptFunctions = scriptContext.members.filter { fn ->
-                !setOf("equals", "hashCode", "toString").contains(fn.name)
-            }
-
-            // Convert from Kotlin reflection to our representation
-            ctx.structs += scriptClasses.associate {
-                it.simpleName!! to Struct(it)
-            }
-            ctx.symbols += scriptFunctions.associate {
-                it.name to NativeFunction(it)
-            }
-        }
-
-        return ctx
+        return TranslationUnit(scriptContext)
     }
 
-    fun compileSources(paths: Iterable<String>): List<TranslationUnit> {
+    fun compileScripts(paths: Iterable<String>): List<TranslationUnit> {
         return paths.map { pathArg ->
             val path = File(pathArg).absoluteFile;
             if (!path.exists()) {
-                println("Input path $path does not exist")
+                throw CompilationFailure("Input path $path does not exist")
             }
             val scripts = emptyList<File>().toMutableList()
             if (path.isDirectory) {

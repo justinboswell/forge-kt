@@ -1,29 +1,72 @@
 package software.amazon.awssdk.forge.compiler
 
-import software.amazon.awssdk.forge.native.NativeType
-import software.amazon.awssdk.forge.native.Resource
-import software.amazon.awssdk.forge.native.Void
+import software.amazon.awssdk.forge.native.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
+import kotlin.reflect.full.allSuperclasses
+import kotlin.reflect.full.memberFunctions
+import kotlin.reflect.full.superclasses
 
-inline fun <reified T: Any> KClass<*>.getAnnotation() : T? {
-    return annotations.find {
-        it.annotationClass == T::class
-    } as T
+inline fun <reified T: Any> KClass<*>.getAnnotation(recursive : Boolean = true) : T? {
+    val classesToSearch = listOf(this).toMutableList()
+    if (recursive) {
+        classesToSearch += allSuperclasses.filter {
+            it != Any::class
+        }
+    }
+
+    return classesToSearch.firstNotNullOfOrNull { sc ->
+        sc.annotations.find {
+            it.annotationClass == T::class
+        }
+    } as T?
 }
 
-fun KClass<*>.hasNativeResource(): Boolean {
+val KClass<*>.hasNativeResource: Boolean get() {
     return getAnnotation<Resource>() != null
 }
 
-fun KClass<*>.nativeResourceCtype() : String {
+val KClass<*>.nativeResourceCtype : String? get() {
     val resource = getAnnotation<Resource>()
-        ?: throw UnsupportedOperationException("class $this does not have an associated native resource. Is a @Resource annotation missing?")
+        ?: return null
     return resource.ctype
 }
 
-fun KType.toNativeType() : NativeType<*> {
+val KClass<*>.hasNativeConstructor: Boolean get() {
+    return getAnnotation<Constructor>() != null
+}
+
+val KClass<*>.nativeConstructor: Constructor get() {
+    return getAnnotation()
+        ?: throw CompilationFailure("class $this does not have an associated native constructor. Is a @Constructor annotation missing?")
+}
+
+val KClass<*>.hasNativeDestructor: Boolean get() {
+    return getAnnotation<Destructor>() != null
+}
+
+val KClass<*>.nativeDestructor: Destructor get() {
+    return getAnnotation()
+        ?: throw CompilationFailure("class $this does not have an associated native destructor. Is a @Destructor annotation missing?")
+}
+
+fun Constructor.optionStruct(scope: TranslationUnit) : Struct? {
+    if (options.isEmpty()) {
+        return null
+    }
+    return Struct(scope, options.first())
+}
+
+private val objectFunctions = setOf("equals", "hashCode", "toString")
+val KClass<*>.localMethods: Collection<KFunction<*>> get() {
+    return memberFunctions.filter {
+        !objectFunctions.contains(it.name)
+    }
+}
+
+val KType.nativeType : NativeType<*> get() {
     @Suppress("UNCHECKED_CAST")
     val kclass = this.classifier as KClass<NativeType<*>>
     // Special case Pointer<T>
@@ -43,11 +86,10 @@ fun KType.toNativeType() : NativeType<*> {
         val ctor = kclass.constructors.first()
         return ctor.call()
     } catch (ex: NoSuchElementException) {
-        println("ERROR: Type $kclass is not a recognized native type");
-        return Void()
+        throw CompilationFailure("ERROR: $kclass is not a recognized native type");
     }
 }
 
-fun KParameter.toNativeType() : NativeType<*> {
-    return this.type.toNativeType()
+val KParameter.nativeType : NativeType<*> get() {
+    return this.type.nativeType
 }

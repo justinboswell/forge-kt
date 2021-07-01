@@ -14,13 +14,13 @@ fun main(args: Array<String>) {
     val compiler = Compiler(arch = arch)
 
     try {
-        val translationUnits = compiler.compileSources(paths)
+        val translationUnits = compiler.compileScripts(paths)
         translationUnits.forEach { tu ->
             tu.structs.values.forEach { struct ->
-                println("struct $struct")
+                println("struct ${struct.name}(${struct.ctype})")
             }
-            tu.symbols.values.forEach { symbol ->
-                println("symbol ${(symbol as NativeFunction).cdecl}")
+            tu.functions.values.forEach { fn ->
+                println("symbol ${fn.native.cdecl}")
             }
         }
     } catch (compileFailure: CompilationFailure) {
