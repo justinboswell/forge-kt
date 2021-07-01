@@ -8,9 +8,8 @@ import kotlin.reflect.KClass
 annotation class Resource(val ctype: String)
 
 /// Specifies the constructor for the resource represented by this class. Implies static calling convention
-/// Options argument specifies the options class expected as a parameter to the constructor
 @Target(AnnotationTarget.CLASS)
-annotation class Constructor(val symbol: String, vararg val options: KClass<*>)
+annotation class Constructor(val symbol: String)
 
 /// Specifies the destructor for the resource represented by this class. Implies method calling convention
 @Target(AnnotationTarget.CLASS)

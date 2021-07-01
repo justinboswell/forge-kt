@@ -7,7 +7,7 @@ open class Function(val scope: TranslationUnit, val function: KCallable<*>) {
     val native = NativeFunction(function)
 }
 
-class ResourceConstructor(scope: TranslationUnit, function: KCallable<*>, val options: Struct?)
+class ResourceConstructor(scope: TranslationUnit, function: KCallable<*>)
     : Function(scope, function)
 
 class ResourceDestructor(scope: TranslationUnit, function: KCallable<*>)

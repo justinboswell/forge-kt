@@ -15,8 +15,7 @@ class Struct(val scope: TranslationUnit, private val kclass: KClass<*>) {
         }
         val ctorDesc = kclass.nativeConstructor
         val ctorFunction = scope.functions[ctorDesc.symbol] ?: throw CompilationFailure("Unable to resolve symbol ${ctorDesc.symbol}")
-        val ctorOptions = ctorDesc.optionStruct(scope)
-        return ResourceConstructor(scope, ctorFunction.function, ctorOptions)
+        return ResourceConstructor(scope, ctorFunction.function)
     }
 
     private fun resolveDestructor() : ResourceDestructor? {

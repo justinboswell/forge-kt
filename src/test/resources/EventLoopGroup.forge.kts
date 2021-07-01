@@ -6,7 +6,7 @@ external fun aws_crt_event_loop_group_options_new() : Pointer<EventLoopGroupOpti
 external fun aws_crt_event_loop_group_options_release(options: Pointer<EventLoopGroupOptions>)
 external fun aws_crt_event_loop_group_options_set_max_threads(options: Pointer<EventLoopGroupOptions>, maxThreads: Int32)
 
-external fun aws_crt_event_loop_group_new() : Pointer<EventLoopGroup>
+external fun aws_crt_event_loop_group_new(options: Pointer<EventLoopGroupOptions>) : Pointer<EventLoopGroup>
 external fun aws_crt_event_loop_group_release(elg: Pointer<EventLoopGroup>)
 
 @Resource("aws_crt_event_loop_group_options")
@@ -19,6 +19,6 @@ interface EventLoopGroupOptions {
 }
 
 @Resource("aws_crt_event_loop_group")
-@Constructor("aws_crt_event_loop_group_new", EventLoopGroupOptions::class)
+@Constructor("aws_crt_event_loop_group_new")
 @Destructor("aws_crt_event_loop_group_release")
 interface EventLoopGroup

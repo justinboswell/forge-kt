@@ -51,13 +51,6 @@ val KClass<*>.nativeDestructor: Destructor get() {
         ?: throw CompilationFailure("class $this does not have an associated native destructor. Is a @Destructor annotation missing?")
 }
 
-fun Constructor.optionStruct(scope: TranslationUnit) : Struct? {
-    if (options.isEmpty()) {
-        return null
-    }
-    return Struct(scope, options.first())
-}
-
 private val objectFunctions = setOf("equals", "hashCode", "toString")
 val KClass<*>.localMethods: Collection<KFunction<*>> get() {
     return memberFunctions.filter {
