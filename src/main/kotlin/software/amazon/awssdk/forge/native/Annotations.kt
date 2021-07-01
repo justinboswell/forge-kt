@@ -39,4 +39,4 @@ annotation class Getter(val symbol: String)
 
 /// Indicates that the function is intended to be a static function when generated
 @Target(AnnotationTarget.FUNCTION)
-annotation class Static()
+annotation class Static

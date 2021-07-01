@@ -7,7 +7,6 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.full.superclasses
 
 inline fun <reified T: Any> KClass<*>.getAnnotation(recursive : Boolean = true) : T? {
     val classesToSearch = listOf(this).toMutableList()
@@ -86,7 +85,7 @@ val KType.nativeType : NativeType<*> get() {
         val ctor = kclass.constructors.first()
         return ctor.call()
     } catch (ex: NoSuchElementException) {
-        throw CompilationFailure("ERROR: $kclass is not a recognized native type");
+        throw CompilationFailure("ERROR: $kclass is not a recognized native type")
     }
 }
 

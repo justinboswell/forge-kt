@@ -16,6 +16,4 @@ enum class Architecture(val bits: Int) {
     Any64(64),
 }
 
-enum class Target(val os: OS, val arch: Architecture) {
-
-}
+enum class Target(val os: OS, val arch: Architecture)

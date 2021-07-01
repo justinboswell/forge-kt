@@ -46,14 +46,14 @@ class Compiler(val arch: Architecture = Architecture.Any64) {
         // Kotlin script creates a class out of the file to scope the contents
         // So we interrogate whatever symbols we can find inside the returned class
         val scriptContext = result.valueOrThrow().returnValue.scriptClass
-            ?: throw CompilationFailure("Kotlin script engine could not evaluate $file");
+            ?: throw CompilationFailure("Kotlin script engine could not evaluate $file")
 
         return TranslationUnit(scriptContext)
     }
 
     fun compileScripts(paths: Iterable<String>): List<TranslationUnit> {
         return paths.map { pathArg ->
-            val path = File(pathArg).absoluteFile;
+            val path = File(pathArg).absoluteFile
             if (!path.exists()) {
                 throw CompilationFailure("Input path $path does not exist")
             }
